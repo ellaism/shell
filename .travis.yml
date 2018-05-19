@@ -1,7 +1,45 @@
 language: node_js
 node_js: 9
 
-script:
-  - npm run lint
-  - npm run test
-  - npm run build
+matrix:
+  include:
+    - os: linux
+      script:
+        - npm run lint
+        - npm run test
+        - npm run build
+        - npm run release -- --linux
+      deploy:
+        provider: releases
+        api_key:
+          secure: eO6cB34rOhMB+Kj+uI6jC/U+GV3CowqLLYo/15ng4UCkO8LZkJk1YqA/GGuGvWGLHKu5PlDDGhThjjJfv8zRbB2J9g5KfGnBLNvJDopW/6yp3qPQw7R5XuyA1mzH1Akm0hPBt8ACiaYGBUcpD2YNVU+BvzvW1Ac2b7VwW4qugx1QRri2IZONM9f2HFFU037FTxua7simLt4DZ5HxuiAGinoCYV/BmH9JUMLA7O7jU3AkI78u3/kBuyHFNjcVhhjRbXpQzNSTaEl/aJgk1IwJfOIdl1hSeQWrqUPDimg2y5PUVciAtE95ZbqTCQ0zRQDbwXND2XEQloVxTlhVUUXefSCr4CEh+lZgRvOv4HD9sdPcj8t7gQ1WkDGVxFivm5pfKzl1aLySB8H0Qy0Xy1eTSh02QNQFCBsMjRG1HAmpp2rNvbax00Lvu3s9lhVvYpjCH1WIoZlwrp+5fVrCI3QPciXQ2b1ms7kxA6XYpr6JOk1216pE9JNEBjy317CV5PrKfaqMFiwQnb1VmbidI015SeL2zFvzWU98Fh0CVWEsU2EJWyMVVan6OSKet6wHaZqo6wANoDG+dmG0RQ9NgKwEjP0as4FwGgM+lxA8BWTEYicjObPeAaiM1AjInIUI6zagc0083de7Wgql0N9Mhv8yv+SgCgU0ACzAONZjErSiCN8=
+        file:
+          - dist/*.deb
+          - dist/*.snap
+          - dist/*.AppImage
+          - dist/*.xz
+        file_glob: true
+        draft: true
+        on:
+          repo: ellaism/shell
+          tags: true
+        skip_cleanup: true
+
+    - os: osx
+      script:
+        - npm run lint
+        - npm run test
+        - npm run build
+        - npm run release -- --mac
+      deploy:
+        provider: releases
+        api_key:
+          secure: eO6cB34rOhMB+Kj+uI6jC/U+GV3CowqLLYo/15ng4UCkO8LZkJk1YqA/GGuGvWGLHKu5PlDDGhThjjJfv8zRbB2J9g5KfGnBLNvJDopW/6yp3qPQw7R5XuyA1mzH1Akm0hPBt8ACiaYGBUcpD2YNVU+BvzvW1Ac2b7VwW4qugx1QRri2IZONM9f2HFFU037FTxua7simLt4DZ5HxuiAGinoCYV/BmH9JUMLA7O7jU3AkI78u3/kBuyHFNjcVhhjRbXpQzNSTaEl/aJgk1IwJfOIdl1hSeQWrqUPDimg2y5PUVciAtE95ZbqTCQ0zRQDbwXND2XEQloVxTlhVUUXefSCr4CEh+lZgRvOv4HD9sdPcj8t7gQ1WkDGVxFivm5pfKzl1aLySB8H0Qy0Xy1eTSh02QNQFCBsMjRG1HAmpp2rNvbax00Lvu3s9lhVvYpjCH1WIoZlwrp+5fVrCI3QPciXQ2b1ms7kxA6XYpr6JOk1216pE9JNEBjy317CV5PrKfaqMFiwQnb1VmbidI015SeL2zFvzWU98Fh0CVWEsU2EJWyMVVan6OSKet6wHaZqo6wANoDG+dmG0RQ9NgKwEjP0as4FwGgM+lxA8BWTEYicjObPeAaiM1AjInIUI6zagc0083de7Wgql0N9Mhv8yv+SgCgU0ACzAONZjErSiCN8=
+        file:
+          - dist/*.pkg
+        file_glob: true
+        draft: true
+        on:
+          repo: ellaism/shell
+          tags: true
+        skip_cleanup: true
