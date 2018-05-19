@@ -28,6 +28,8 @@ matrix:
       script:
         - npm run lint
         - npm run test
+        - export ELECTRON_BUILDER_ALLOW_UNRESOLVED_DEPENDENCIES=true
+        - export CSC_IDENTITY_AUTO_DISCOVERY=false
         - npm run release -- --mac
       deploy:
         provider: releases
