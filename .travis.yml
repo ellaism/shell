@@ -11,6 +11,7 @@ cache:
     - node_modules
     - $HOME/.cache/electron
     - $HOME/.cache/electron-builder
+    - $HOME/.npm/_prebuilds
 
 before_cache:
   - rm -rf $HOME/.cache/electron-builder/wine
