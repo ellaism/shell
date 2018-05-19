@@ -7,7 +7,6 @@ matrix:
       script:
         - npm run lint
         - npm run test
-        - npm run build
         - npm run release -- --linux
       deploy:
         provider: releases
@@ -29,7 +28,6 @@ matrix:
       script:
         - npm run lint
         - npm run test
-        - npm run build
         - npm run release -- --mac
       deploy:
         provider: releases
