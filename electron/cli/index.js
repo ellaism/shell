@@ -65,7 +65,7 @@ const camelcase = flag =>
 
 // Now we must think which arguments passed to cli must be passed down to
 // parity.
-const parityArgv = cli.rawArgs
+let parityArgv = cli.rawArgs
   .splice(2) // Remove first 2 arguments which are program path
   .filter((item, index, array) => {
     const key = camelcase(item.replace('--', '').replace('no-', '')); // Remove '--' and then camelCase
@@ -96,5 +96,9 @@ const parityArgv = cli.rawArgs
 
     return true;
   });
+
+if (!parityArgv.some((item) => item.startsWith('--chain'))) {
+  parityArgv.push('--chain=ellaism');
+}
 
 module.exports = { cli, parityArgv };
