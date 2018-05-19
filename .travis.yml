@@ -7,6 +7,9 @@ cache:
     - $HOME/.cache/electron
     - $HOME/.cache/electron-builder
 
+before_cache:
+  - rm -rf $HOME/.cache/electron-builder/wine
+
 matrix:
   include:
     - os: linux
