@@ -1,5 +1,5 @@
 {
-  "appId": "io.parity.ui",
+  "appId": "io.ellaism.ui",
   "directories": {
     "buildResources": "./"
   },
@@ -29,10 +29,10 @@
     "allowAnywhere": false,
     "allowCurrentUserHome": false
   },
-  "productName": "Parity UI",
+  "productName": "Ellaism Shell",
   "win": {
     "icon": "./assets/icon/small-white-512x512.png",
-    "publisherName": "Parity Technologies (UK) Ltd.",
+    "publisherName": "The Ellaism Project.",
     "target": "nsis"
   }
 }
