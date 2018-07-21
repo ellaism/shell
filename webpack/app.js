@@ -26,14 +26,13 @@ const CopyWebpackPlugin = require('copy-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const ServiceWorkerWebpackPlugin = require('serviceworker-webpack-plugin');
 
+const { rendererCsp } = require('../src/util/csp');
 const rulesEs6 = require('./rules/es6');
 const rulesParity = require('./rules/parity');
 const Shared = require('./shared');
 
-const DAPPS_BUILTIN = require('@parity/shared/lib/config/dappsBuiltin.json');
-const DAPPS_VIEWS = require('@parity/shared/lib/config/dappsViews.json');
-const DAPPS_ALL = []
-  .concat(DAPPS_BUILTIN, DAPPS_VIEWS)
+const DAPPS_BUILTIN = require('../src/Dapps/dappsBuiltin.json');
+const DAPPS_ALL = DAPPS_BUILTIN
   .filter((dapp) => !dapp.skipBuild)
   .filter((dapp) => dapp.package);
 
@@ -54,7 +53,7 @@ module.exports = {
   cache: !isProd,
   devtool: isProd
     ? false
-    : isEmbed ? '#source-map' : '#eval',
+    : '#source-map',
   context: path.join(__dirname, '../src'),
   entry,
   output: {
@@ -158,9 +157,7 @@ module.exports = {
     unsafeCache: true
   },
 
-  node: {
-    fs: 'empty'
-  },
+  target: 'electron-renderer',
 
   plugins: (function () {
     let plugins = Shared.getPlugins().concat(
@@ -175,6 +172,7 @@ module.exports = {
         plugins,
 
         new HtmlWebpackPlugin({
+          csp: rendererCsp.join(' '),
           title: 'Parity UI',
           filename: 'index.html',
           template: './index.parity.ejs',

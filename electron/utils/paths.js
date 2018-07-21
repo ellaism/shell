@@ -14,9 +14,13 @@
 // You should have received a copy of the GNU General Public License
 // along with Parity.  If not, see <http://www.gnu.org/licenses/>.
 
-#[cfg(feature = "with-syntex")]
-include!(concat!(env!("OUT_DIR"), "/lib.rs"));
+const path = require('path');
+const electron = require('electron');
 
-#[cfg(not(feature = "with-syntex"))]
-include!("lib.rs.in");
+module.exports = {
+  getLocalDappsPath: () => {
+    const userData = electron.app.getPath('userData');
 
+    return path.join(userData, 'dapps');
+  }
+};

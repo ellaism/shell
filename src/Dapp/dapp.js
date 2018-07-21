@@ -20,17 +20,15 @@ import isElectron from 'is-electron';
 import { observer } from 'mobx-react';
 import PropTypes from 'prop-types';
 import path from 'path';
+import { getBuildPath } from '../util/host';
 import url from 'url';
 
-import builtinDapps from '@parity/shared/lib/config/dappsBuiltin.json';
-import viewsDapps from '@parity/shared/lib/config/dappsViews.json';
-import DappsStore from '@parity/shared/lib/mobx/dappsStore';
+import builtinDapps from '../Dapps/dappsBuiltin.json';
+import DappsStore from '../Dapps/store';
 import HistoryStore from '@parity/shared/lib/mobx/historyStore';
-
 import RequestsStore from '../DappRequests/store';
-import styles from './dapp.css';
 
-const internalDapps = [].concat(viewsDapps, builtinDapps);
+import styles from './dapp.css';
 
 @observer
 export default class Dapp extends Component {
@@ -54,7 +52,7 @@ export default class Dapp extends Component {
   componentWillMount () {
     const { id } = this.props.params;
 
-    if (!internalDapps[id] || !internalDapps[id].skipHistory) {
+    if (!builtinDapps[id] || !builtinDapps[id].skipHistory) {
       this.historyStore.add(id);
     }
 
@@ -95,17 +93,16 @@ export default class Dapp extends Component {
     // Reput eventListeners when webview has finished loading dapp
     webview.addEventListener('did-finish-load', () => {
       this.setState({ loading: false });
-      // Listen to IPC messages from this webview
-      webview.addEventListener('ipc-message', event =>
-        this.requestsStore.receiveMessage({
-          ...event.args[0],
-          source: event.target
-        }));
-      // Send ping message to tell dapp we're ready to listen to its ipc messages
-      webview.send('ping');
     });
 
-    this.onDappLoad();
+    // Listen to IPC messages from this webview. More particularly, to IPC
+    // messages coming from the preload.js injected in this webview.
+    webview.addEventListener('ipc-message', event => {
+      this.requestsStore.receiveMessage({
+        ...event.args[0],
+        source: event.target
+      });
+    });
   };
 
   loadApp (id) {
@@ -127,7 +124,6 @@ export default class Dapp extends Component {
       frameBorder={ 0 }
       id='dappFrame'
       name={ name }
-      onLoad={ this.onDappLoad }
       ref={ this.handleIframe }
       sandbox='allow-forms allow-popups allow-same-origin allow-scripts allow-top-navigation'
       scrolling='auto'
@@ -136,81 +132,53 @@ export default class Dapp extends Component {
   )
 
   renderWebview = (src, hash) => {
-    const remote = window.require('electron').remote;
-    // Replace all backslashes by front-slashes (happens in Windows)
-    // Note: `dirName` contains backslashes in Windows. One would assume that
-    // path.join in Windows would handle everything for us, but after some time
-    // I realized that even in Windows path.join here bahaves like POSIX (maybe
-    // it's electron, maybe browser env?). Switching to '/'. -Amaury 12.03.2018
-    const posixDirName = remote.getGlobal('dirName').replace(/\\/g, '/');
     const preload = `file://${path.join(
-      posixDirName,
-      '..',
-      '.build',
-      'inject.js'
+      getBuildPath(),
+      'preload.js'
     )}`;
 
+    // https://electronjs.org/docs/tutorial/security#3-enable-context-isolation-for-remote-content
     return <webview
       className={ styles.frame }
       id='dappFrame'
-      nodeintegration='true'
       preload={ preload }
       ref={ this.handleWebview }
       src={ `${src}${hash}` }
+      webpreferences='contextIsolation'
            />;
   }
 
   render () {
-    const { dappsUrl } = this.context.api;
     const { params } = this.props;
     const { app, loading } = this.state;
 
     if (loading) {
-      return null;
+      return (
+        <div className={ styles.full }>
+          <p className={ styles.loading }>
+            <FormattedMessage
+              id='dapp.loading'
+              defaultMessage='Loading...'
+            />
+          </p>
+        </div>
+      );
     }
 
     if (!app) {
       return (
         <div className={ styles.full }>
-          <div className={ styles.text }>
+          <p>
             <FormattedMessage
               id='dapp.unavailable'
               defaultMessage='The dapp cannot be reached'
             />
-          </div>
+          </p>
         </div>
       );
     }
 
-    let src = null;
-
-    switch (app.type) {
-      case 'local':
-        src = app.localUrl
-          ? `${app.localUrl}?appId=${app.id}`
-          : `${dappsUrl}/${app.id}/`;
-        break;
-
-      case 'network':
-        src = `${dappsUrl}/${app.contentHash}/`;
-        break;
-
-      default:
-        let dapphost = process.env.DAPPS_URL || (
-          process.env.NODE_ENV === 'production'
-            ? `${dappsUrl}/ui`
-            : ''
-        );
-
-        if (dapphost === '/') {
-          dapphost = '';
-        }
-
-        src = window.location.protocol === 'file:'
-          ? `dapps/${app.id}/index.html`
-          : `${dapphost}/dapps/${app.id}/index.html`;
-        break;
-    }
+    let src = `${app.localUrl}?appId=${app.id}`;
 
     let hash = '';
 
@@ -221,11 +189,5 @@ export default class Dapp extends Component {
     return isElectron()
       ? this.renderWebview(src, hash)
       : this.renderIframe(src, hash);
-  }
-
-  onDappLoad = () => {
-    const frame = document.getElementById('dappFrame');
-
-    frame.style.opacity = 1;
   }
 }
